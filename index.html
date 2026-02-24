@@ -1,0 +1,1363 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PHB Vendor — D&D 5e Equipment Shop</title>
+<style>
+/* ─── CSS Custom Properties ─── */
+:root {
+  --bg-page: #f4e8d1;
+  --bg-card: #faf3e6;
+  --bg-card-hover: #fff8ed;
+  --bg-header: #3b2e1e;
+  --bg-controls: #ebe0cc;
+  --bg-cart: #f9f0de;
+  --bg-cart-header: #e8dbc4;
+  --text-primary: #3b2e1e;
+  --text-secondary: #5c4a32;
+  --text-muted: #8a7a64;
+  --text-on-dark: #f4e8d1;
+  --accent-gold: #8b6914;
+  --accent-gold-light: #c9a227;
+  --accent-gold-bg: #f5ecd3;
+  --border-light: #d4c4a8;
+  --border-medium: #b8a88e;
+  --green: #2d7a3a;
+  --yellow: #b8860b;
+  --red: #a83232;
+  --red-bg: #f5d5d5;
+  --font-heading: Georgia, 'Times New Roman', serif;
+  --font-body: system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --radius: 6px;
+  --shadow-sm: 0 1px 3px rgba(59,46,30,0.12);
+  --shadow-md: 0 3px 8px rgba(59,46,30,0.15);
+  --shadow-lg: 0 6px 20px rgba(59,46,30,0.2);
+  --cart-width: 360px;
+  --controls-height: 52px;
+}
+
+/* ─── Reset & Base ─── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  font-family: var(--font-body);
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--text-primary);
+  background: var(--bg-page);
+  min-height: 100vh;
+}
+
+/* ─── Header ─── */
+.site-header {
+  background: var(--bg-header);
+  color: var(--text-on-dark);
+  padding: 16px 24px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.site-header h1 {
+  font-family: var(--font-heading);
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+.site-header .subtitle {
+  font-size: 0.8rem;
+  opacity: 0.7;
+  margin-left: 4px;
+}
+.header-icon {
+  width: 32px; height: 32px;
+  fill: var(--accent-gold-light);
+  flex-shrink: 0;
+}
+
+/* ─── Controls Bar ─── */
+.controls-bar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: var(--bg-controls);
+  border-bottom: 1px solid var(--border-light);
+  padding: 8px 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  box-shadow: var(--shadow-sm);
+}
+.search-box {
+  position: relative;
+  flex: 0 1 280px;
+  min-width: 140px;
+}
+.search-box input {
+  width: 100%;
+  padding: 6px 10px 6px 32px;
+  border: 1px solid var(--border-medium);
+  border-radius: var(--radius);
+  background: var(--bg-card);
+  font-size: 13px;
+  color: var(--text-primary);
+  outline: none;
+  transition: border-color 0.2s;
+}
+.search-box input:focus { border-color: var(--accent-gold); }
+.search-box input::placeholder { color: var(--text-muted); }
+.search-icon {
+  position: absolute;
+  left: 8px; top: 50%;
+  transform: translateY(-50%);
+  width: 16px; height: 16px;
+  fill: var(--text-muted);
+  pointer-events: none;
+}
+.category-tabs {
+  display: flex;
+  gap: 4px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  flex: 1;
+  -webkit-overflow-scrolling: touch;
+}
+.category-tabs::-webkit-scrollbar { display: none; }
+.tab-btn {
+  padding: 5px 12px;
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius);
+  background: var(--bg-card);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.15s;
+}
+.tab-btn:hover { background: var(--bg-card-hover); border-color: var(--border-medium); }
+.tab-btn.active {
+  background: var(--accent-gold);
+  color: #fff;
+  border-color: var(--accent-gold);
+}
+.str-control {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+.str-control input {
+  width: 42px;
+  padding: 4px 6px;
+  border: 1px solid var(--border-medium);
+  border-radius: var(--radius);
+  background: var(--bg-card);
+  font-size: 13px;
+  text-align: center;
+  color: var(--text-primary);
+  outline: none;
+}
+.str-control input:focus { border-color: var(--accent-gold); }
+
+/* ─── Main Layout ─── */
+.main-layout {
+  display: grid;
+  grid-template-columns: 1fr var(--cart-width);
+  min-height: calc(100vh - 160px);
+}
+
+/* ─── Catalog ─── */
+.catalog { padding: 16px; }
+.category-section { margin-bottom: 8px; }
+.category-section summary {
+  font-family: var(--font-heading);
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--accent-gold);
+  cursor: pointer;
+  padding: 8px 4px;
+  border-bottom: 1px solid var(--border-light);
+  list-style: none;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  user-select: none;
+}
+.category-section summary::-webkit-details-marker { display: none; }
+.category-section summary::before {
+  content: '▸';
+  display: inline-block;
+  transition: transform 0.2s;
+  font-size: 0.9em;
+}
+.category-section[open] > summary::before { transform: rotate(90deg); }
+.category-section .item-count {
+  font-family: var(--font-body);
+  font-size: 0.75rem;
+  font-weight: 400;
+  color: var(--text-muted);
+}
+.items-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 8px;
+  padding: 10px 0;
+}
+
+/* ─── Item Cards ─── */
+.item-card {
+  position: relative;
+  background: var(--bg-card);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius);
+  padding: 10px 12px;
+  cursor: pointer;
+  transition: all 0.15s;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.item-card:hover {
+  background: var(--bg-card-hover);
+  border-color: var(--border-medium);
+  box-shadow: var(--shadow-sm);
+}
+.item-card.flash {
+  animation: goldFlash 0.4s ease-out;
+}
+@keyframes goldFlash {
+  0% { box-shadow: 0 0 0 0 rgba(201,162,39,0.6); }
+  50% { box-shadow: 0 0 12px 4px rgba(201,162,39,0.3); }
+  100% { box-shadow: none; }
+}
+.item-name {
+  font-family: var(--font-heading);
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  padding-right: 20px;
+}
+.item-cost-weight {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}
+.item-cost { font-weight: 600; color: var(--accent-gold); }
+.item-stats {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  line-height: 1.4;
+}
+.item-stats .stat-label { font-weight: 600; color: var(--text-secondary); }
+.item-link {
+  position: absolute;
+  top: 8px; right: 8px;
+  width: 16px; height: 16px;
+  fill: var(--text-muted);
+  opacity: 0.4;
+  transition: opacity 0.15s;
+}
+.item-card:hover .item-link { opacity: 0.8; }
+
+/* ─── Cart Panel ─── */
+.cart-panel {
+  background: var(--bg-cart);
+  border-left: 1px solid var(--border-light);
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - 52px);
+  position: sticky;
+  top: 52px;
+}
+.cart-header {
+  background: var(--bg-cart-header);
+  padding: 12px 16px;
+  font-family: var(--font-heading);
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  border-bottom: 1px solid var(--border-light);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.cart-header .cart-count {
+  font-family: var(--font-body);
+  font-size: 0.8rem;
+  font-weight: 400;
+  color: var(--text-muted);
+}
+.cart-items {
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px;
+}
+.cart-empty {
+  text-align: center;
+  padding: 40px 16px;
+  color: var(--text-muted);
+  font-style: italic;
+}
+.cart-item {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 4px 8px;
+  padding: 8px;
+  border-bottom: 1px solid var(--border-light);
+  align-items: center;
+}
+.cart-item-name {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  grid-column: 1 / -1;
+}
+.cart-item-details {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+.cart-item-controls {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  justify-self: end;
+}
+.qty-btn {
+  width: 22px; height: 22px;
+  border: 1px solid var(--border-medium);
+  border-radius: 3px;
+  background: var(--bg-card);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-secondary);
+  line-height: 1;
+  transition: all 0.1s;
+}
+.qty-btn:hover { background: var(--bg-card-hover); border-color: var(--accent-gold); }
+.qty-display {
+  min-width: 20px;
+  text-align: center;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+.remove-btn {
+  width: 22px; height: 22px;
+  border: none;
+  border-radius: 3px;
+  background: transparent;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  fill: var(--text-muted);
+  transition: fill 0.1s;
+  margin-left: 4px;
+}
+.remove-btn:hover { fill: var(--red); }
+
+/* ─── Cart Totals ─── */
+.cart-totals {
+  border-top: 2px solid var(--border-medium);
+  padding: 12px 16px;
+  background: var(--bg-cart-header);
+}
+.cart-total-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.85rem;
+  margin-bottom: 6px;
+}
+.cart-total-row.total-cost {
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: var(--accent-gold);
+}
+.cart-total-row.total-weight {
+  font-weight: 600;
+}
+
+/* ─── Encumbrance Bar ─── */
+.encumbrance-section { margin-top: 8px; }
+.encumbrance-label {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin-bottom: 3px;
+}
+.encumbrance-bar {
+  height: 10px;
+  background: #e0d5c0;
+  border-radius: 5px;
+  overflow: hidden;
+  position: relative;
+}
+.encumbrance-fill {
+  height: 100%;
+  border-radius: 5px;
+  transition: width 0.3s, background-color 0.3s;
+  min-width: 2px;
+}
+.encumbrance-fill.green { background: var(--green); }
+.encumbrance-fill.yellow { background: var(--yellow); }
+.encumbrance-fill.red { background: var(--red); }
+.encumbrance-status {
+  font-size: 0.72rem;
+  font-weight: 700;
+  margin-top: 3px;
+  text-align: right;
+}
+.encumbrance-status.over { color: var(--red); }
+
+/* ─── Cart Actions ─── */
+.cart-actions {
+  padding: 8px 16px 12px;
+  background: var(--bg-cart-header);
+}
+.clear-cart-btn {
+  width: 100%;
+  padding: 7px;
+  border: 1px solid var(--red);
+  border-radius: var(--radius);
+  background: transparent;
+  color: var(--red);
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.clear-cart-btn:hover { background: var(--red); color: #fff; }
+
+/* ─── Footer ─── */
+.site-footer {
+  text-align: center;
+  padding: 16px;
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  border-top: 1px solid var(--border-light);
+}
+.site-footer a { color: var(--accent-gold); text-decoration: none; }
+.site-footer a:hover { text-decoration: underline; }
+
+/* ─── Mobile Cart FAB ─── */
+.cart-fab {
+  display: none;
+  position: fixed;
+  bottom: 20px; right: 20px;
+  width: 56px; height: 56px;
+  border-radius: 50%;
+  border: none;
+  background: var(--accent-gold);
+  color: #fff;
+  box-shadow: var(--shadow-lg);
+  cursor: pointer;
+  z-index: 200;
+  align-items: center;
+  justify-content: center;
+}
+.cart-fab svg { width: 24px; height: 24px; fill: #fff; }
+.cart-fab .fab-badge {
+  position: absolute;
+  top: -2px; right: -2px;
+  background: var(--red);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  width: 20px; height: 20px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+.cart-fab .fab-badge:empty { display: none; }
+
+/* ─── Cart Overlay (mobile) ─── */
+.cart-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(59,46,30,0.4);
+  z-index: 299;
+}
+.cart-overlay.visible { display: block; }
+
+/* ─── Mobile Close Button ─── */
+.cart-close-btn {
+  display: none;
+  border: none;
+  background: transparent;
+  font-size: 1.4rem;
+  cursor: pointer;
+  color: var(--text-secondary);
+  padding: 0 4px;
+  line-height: 1;
+}
+
+/* ─── Responsive ─── */
+@media (max-width: 800px) {
+  .main-layout { grid-template-columns: 1fr; }
+  .cart-panel {
+    position: fixed;
+    top: 0; right: 0;
+    width: min(85vw, 360px);
+    height: 100vh;
+    z-index: 300;
+    transform: translateX(100%);
+    transition: transform 0.3s ease;
+    box-shadow: var(--shadow-lg);
+  }
+  .cart-panel.open { transform: translateX(0); }
+  .cart-fab { display: flex; }
+  .cart-close-btn { display: block; }
+  .str-control { display: none; }
+  .items-grid { grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); }
+  .controls-bar { flex-wrap: wrap; gap: 6px; }
+  .search-box { flex: 1 1 100%; order: -1; }
+}
+@media (max-width: 500px) {
+  .site-header { padding: 12px 16px; }
+  .site-header h1 { font-size: 1.2rem; }
+  .items-grid { grid-template-columns: 1fr; }
+  .item-card { padding: 8px 10px; }
+}
+
+/* ─── Print ─── */
+@media print {
+  .controls-bar, .catalog, .cart-fab, .cart-overlay, .cart-close-btn, .clear-cart-btn { display: none !important; }
+  .main-layout { grid-template-columns: 1fr; }
+  .cart-panel {
+    position: static !important;
+    transform: none !important;
+    width: 100% !important;
+    height: auto !important;
+    border: none;
+    box-shadow: none;
+  }
+  .site-header { background: #fff; color: #000; }
+  .site-header h1 { color: #000; }
+  .header-icon { fill: #000; }
+}
+
+/* ─── No-results ─── */
+.no-results {
+  text-align: center;
+  padding: 40px 16px;
+  color: var(--text-muted);
+  font-style: italic;
+  font-size: 0.95rem;
+}
+
+/* ─── Mobile STR in cart ─── */
+.cart-str-control {
+  display: none;
+  padding: 8px 16px;
+  background: var(--bg-cart-header);
+  border-bottom: 1px solid var(--border-light);
+}
+@media (max-width: 800px) {
+  .cart-str-control { display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; color: var(--text-secondary); }
+  .cart-str-control input { width: 42px; padding: 4px 6px; border: 1px solid var(--border-medium); border-radius: var(--radius); background: var(--bg-card); font-size: 13px; text-align: center; outline: none; }
+}
+</style>
+</head>
+<body>
+
+<!-- ─── Header ─── -->
+<header class="site-header">
+  <svg class="header-icon" viewBox="0 0 24 24"><path d="M12 2L2 7v10l10 5 10-5V7L12 2zm0 2.18L19.39 7.5 12 10.82 4.61 7.5 12 4.18zM4 8.72l7 3.5v7.56l-7-3.5V8.72zm10 11.06V12.22l7-3.5v7.56l-7 3.5z"/></svg>
+  <div>
+    <h1>PHB Vendor <span class="subtitle">— D&amp;D 5e Equipment Shop</span></h1>
+  </div>
+</header>
+
+<!-- ─── Controls Bar ─── -->
+<div class="controls-bar">
+  <div class="search-box">
+    <svg class="search-icon" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27A6.47 6.47 0 0016 9.5 6.5 6.5 0 109.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+    <input type="text" id="searchInput" placeholder="Search items, properties, damage types...">
+  </div>
+  <div class="category-tabs" id="categoryTabs">
+    <button class="tab-btn active" data-section="all">All</button>
+    <button class="tab-btn" data-section="Weapons">Weapons</button>
+    <button class="tab-btn" data-section="Armor">Armor</button>
+    <button class="tab-btn" data-section="Tools">Tools</button>
+    <button class="tab-btn" data-section="Gear">Gear</button>
+    <button class="tab-btn" data-section="Mounts &amp; Vehicles">Mounts</button>
+    <button class="tab-btn" data-section="Services">Services</button>
+  </div>
+  <div class="str-control">
+    <label for="strInput">STR</label>
+    <input type="number" id="strInput" min="1" max="30" value="10">
+  </div>
+</div>
+
+<!-- ─── Main Content ─── -->
+<div class="main-layout">
+  <div class="catalog" id="catalog"></div>
+
+  <!-- Cart Overlay (mobile) -->
+  <div class="cart-overlay" id="cartOverlay"></div>
+
+  <aside class="cart-panel" id="cartPanel">
+    <div class="cart-header">
+      <span>Shopping Cart</span>
+      <span class="cart-count" id="cartCountHeader"></span>
+      <button class="cart-close-btn" id="cartCloseBtn">&times;</button>
+    </div>
+    <div class="cart-str-control">
+      <label for="strInputMobile">STR</label>
+      <input type="number" id="strInputMobile" min="1" max="30" value="10">
+    </div>
+    <div class="cart-items" id="cartItems"></div>
+    <div class="cart-totals" id="cartTotals"></div>
+    <div class="cart-actions" id="cartActions" style="display:none;">
+      <button class="clear-cart-btn" id="clearCartBtn">Clear Cart</button>
+    </div>
+  </aside>
+</div>
+
+<!-- ─── Cart FAB (mobile) ─── -->
+<button class="cart-fab" id="cartFab">
+  <svg viewBox="0 0 24 24"><path d="M7 18c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm10 0c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zM7.17 14.75l.03-.12.9-1.63h7.45c.75 0 1.41-.41 1.75-1.03l3.58-6.49A1 1 0 0020 4H5.21l-.94-2H1v2h2l3.6 7.59-1.35 2.44C4.52 15.37 5.48 17 7 17h12v-2H7.42c-.14 0-.25-.11-.25-.25z"/></svg>
+  <span class="fab-badge" id="fabBadge"></span>
+</button>
+
+<!-- ─── Footer ─── -->
+<footer class="site-footer">
+  Equipment data from the
+  <a href="https://www.dndbeyond.com/sources/dnd/free-rules" target="_blank" rel="noopener">System Reference Document 5.2.1</a>.
+  &copy; Wizards of the Coast, licensed under
+  <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">CC-BY-4.0</a>.
+  Item links lead to <a href="https://www.dndbeyond.com" target="_blank" rel="noopener">D&amp;D Beyond</a>.
+</footer>
+
+<script>
+/* ═══════════════════════════════════════════════
+   ITEM DATA — SRD v5.2.1 Equipment
+   All costs in copper pieces (CP). 1 SP=10, 1 GP=100, 1 PP=1000
+   ═══════════════════════════════════════════════ */
+
+const BEYOND = 'https://www.dndbeyond.com/equipment/';
+const SEARCH = 'https://www.dndbeyond.com/equipment?filter-search=';
+
+const ITEMS = [
+  // ─── SIMPLE MELEE WEAPONS ───
+  {id:'w-club',name:'Club',section:'Weapons',category:'Simple Melee Weapons',cost:10,costDisplay:'1 SP',weight:2,damage:'1d4 Bludgeoning',properties:'Light',mastery:'Slow',url:BEYOND+'5-club'},
+  {id:'w-dagger',name:'Dagger',section:'Weapons',category:'Simple Melee Weapons',cost:200,costDisplay:'2 GP',weight:1,damage:'1d4 Piercing',properties:'Finesse, Light, Thrown (20/60)',mastery:'Nick',url:BEYOND+'3-dagger'},
+  {id:'w-greatclub',name:'Greatclub',section:'Weapons',category:'Simple Melee Weapons',cost:20,costDisplay:'2 SP',weight:10,damage:'1d8 Bludgeoning',properties:'Two-Handed',mastery:'Push',url:BEYOND+'6-greatclub'},
+  {id:'w-handaxe',name:'Handaxe',section:'Weapons',category:'Simple Melee Weapons',cost:500,costDisplay:'5 GP',weight:2,damage:'1d6 Slashing',properties:'Light, Thrown (20/60)',mastery:'Vex',url:BEYOND+'7-handaxe'},
+  {id:'w-javelin',name:'Javelin',section:'Weapons',category:'Simple Melee Weapons',cost:50,costDisplay:'5 SP',weight:2,damage:'1d6 Piercing',properties:'Thrown (30/120)',mastery:'Slow',url:BEYOND+'8-javelin'},
+  {id:'w-light-hammer',name:'Light Hammer',section:'Weapons',category:'Simple Melee Weapons',cost:200,costDisplay:'2 GP',weight:2,damage:'1d4 Bludgeoning',properties:'Light, Thrown (20/60)',mastery:'Nick',url:BEYOND+'10-light-hammer'},
+  {id:'w-mace',name:'Mace',section:'Weapons',category:'Simple Melee Weapons',cost:500,costDisplay:'5 GP',weight:4,damage:'1d6 Bludgeoning',properties:'\u2014',mastery:'Sap',url:BEYOND+'11-mace'},
+  {id:'w-quarterstaff',name:'Quarterstaff',section:'Weapons',category:'Simple Melee Weapons',cost:20,costDisplay:'2 SP',weight:4,damage:'1d6 Bludgeoning',properties:'Versatile (1d8)',mastery:'Topple',url:BEYOND+'12-quarterstaff'},
+  {id:'w-sickle',name:'Sickle',section:'Weapons',category:'Simple Melee Weapons',cost:100,costDisplay:'1 GP',weight:2,damage:'1d4 Slashing',properties:'Light',mastery:'Nick',url:BEYOND+'13-sickle'},
+  {id:'w-spear',name:'Spear',section:'Weapons',category:'Simple Melee Weapons',cost:100,costDisplay:'1 GP',weight:3,damage:'1d6 Piercing',properties:'Thrown (20/60), Versatile (1d8)',mastery:'Sap',url:BEYOND+'14-spear'},
+
+  // ─── SIMPLE RANGED WEAPONS ───
+  {id:'w-dart',name:'Dart',section:'Weapons',category:'Simple Ranged Weapons',cost:5,costDisplay:'5 CP',weight:0.25,damage:'1d4 Piercing',properties:'Finesse, Thrown (20/60)',mastery:'Vex',url:BEYOND+'16-dart'},
+  {id:'w-light-crossbow',name:'Light Crossbow',section:'Weapons',category:'Simple Ranged Weapons',cost:2500,costDisplay:'25 GP',weight:5,damage:'1d8 Piercing',properties:'Ammunition (80/320; Bolt), Loading, Two-Handed',mastery:'Slow',url:BEYOND+'15-crossbow-light'},
+  {id:'w-shortbow',name:'Shortbow',section:'Weapons',category:'Simple Ranged Weapons',cost:2500,costDisplay:'25 GP',weight:2,damage:'1d6 Piercing',properties:'Ammunition (80/320; Arrow), Two-Handed',mastery:'Vex',url:BEYOND+'17-shortbow'},
+  {id:'w-sling',name:'Sling',section:'Weapons',category:'Simple Ranged Weapons',cost:10,costDisplay:'1 SP',weight:0,damage:'1d4 Bludgeoning',properties:'Ammunition (30/120; Bullet)',mastery:'Slow',url:BEYOND+'18-sling'},
+
+  // ─── MARTIAL MELEE WEAPONS ───
+  {id:'w-battleaxe',name:'Battleaxe',section:'Weapons',category:'Martial Melee Weapons',cost:1000,costDisplay:'10 GP',weight:4,damage:'1d8 Slashing',properties:'Versatile (1d10)',mastery:'Topple',url:BEYOND+'19-battleaxe'},
+  {id:'w-flail',name:'Flail',section:'Weapons',category:'Martial Melee Weapons',cost:1000,costDisplay:'10 GP',weight:2,damage:'1d8 Bludgeoning',properties:'\u2014',mastery:'Sap',url:BEYOND+'20-flail'},
+  {id:'w-glaive',name:'Glaive',section:'Weapons',category:'Martial Melee Weapons',cost:2000,costDisplay:'20 GP',weight:6,damage:'1d10 Slashing',properties:'Heavy, Reach, Two-Handed',mastery:'Graze',url:BEYOND+'2-glaive'},
+  {id:'w-greataxe',name:'Greataxe',section:'Weapons',category:'Martial Melee Weapons',cost:3000,costDisplay:'30 GP',weight:7,damage:'1d12 Slashing',properties:'Heavy, Two-Handed',mastery:'Cleave',url:BEYOND+'21-greataxe'},
+  {id:'w-greatsword',name:'Greatsword',section:'Weapons',category:'Martial Melee Weapons',cost:5000,costDisplay:'50 GP',weight:6,damage:'2d6 Slashing',properties:'Heavy, Two-Handed',mastery:'Graze',url:BEYOND+'22-greatsword'},
+  {id:'w-halberd',name:'Halberd',section:'Weapons',category:'Martial Melee Weapons',cost:2000,costDisplay:'20 GP',weight:6,damage:'1d10 Slashing',properties:'Heavy, Reach, Two-Handed',mastery:'Cleave',url:BEYOND+'23-halberd'},
+  {id:'w-lance',name:'Lance',section:'Weapons',category:'Martial Melee Weapons',cost:1000,costDisplay:'10 GP',weight:6,damage:'1d10 Piercing',properties:'Heavy, Reach, Two-Handed (unless mounted)',mastery:'Topple',url:BEYOND+'24-lance'},
+  {id:'w-longsword',name:'Longsword',section:'Weapons',category:'Martial Melee Weapons',cost:1500,costDisplay:'15 GP',weight:3,damage:'1d8 Slashing',properties:'Versatile (1d10)',mastery:'Sap',url:BEYOND+'4-longsword'},
+  {id:'w-maul',name:'Maul',section:'Weapons',category:'Martial Melee Weapons',cost:1000,costDisplay:'10 GP',weight:10,damage:'2d6 Bludgeoning',properties:'Heavy, Two-Handed',mastery:'Topple',url:BEYOND+'25-maul'},
+  {id:'w-morningstar',name:'Morningstar',section:'Weapons',category:'Martial Melee Weapons',cost:1500,costDisplay:'15 GP',weight:4,damage:'1d8 Piercing',properties:'\u2014',mastery:'Sap',url:BEYOND+'26-morningstar'},
+  {id:'w-pike',name:'Pike',section:'Weapons',category:'Martial Melee Weapons',cost:500,costDisplay:'5 GP',weight:18,damage:'1d10 Piercing',properties:'Heavy, Reach, Two-Handed',mastery:'Push',url:BEYOND+'27-pike'},
+  {id:'w-rapier',name:'Rapier',section:'Weapons',category:'Martial Melee Weapons',cost:2500,costDisplay:'25 GP',weight:2,damage:'1d8 Piercing',properties:'Finesse',mastery:'Vex',url:BEYOND+'28-rapier'},
+  {id:'w-scimitar',name:'Scimitar',section:'Weapons',category:'Martial Melee Weapons',cost:2500,costDisplay:'25 GP',weight:3,damage:'1d6 Slashing',properties:'Finesse, Light',mastery:'Nick',url:BEYOND+'29-scimitar'},
+  {id:'w-shortsword',name:'Shortsword',section:'Weapons',category:'Martial Melee Weapons',cost:1000,costDisplay:'10 GP',weight:2,damage:'1d6 Piercing',properties:'Finesse, Light',mastery:'Vex',url:BEYOND+'30-shortsword'},
+  {id:'w-trident',name:'Trident',section:'Weapons',category:'Martial Melee Weapons',cost:500,costDisplay:'5 GP',weight:4,damage:'1d8 Piercing',properties:'Thrown (20/60), Versatile (1d10)',mastery:'Topple',url:BEYOND+'31-trident'},
+  {id:'w-war-pick',name:'War Pick',section:'Weapons',category:'Martial Melee Weapons',cost:500,costDisplay:'5 GP',weight:2,damage:'1d8 Piercing',properties:'Versatile (1d10)',mastery:'Sap',url:BEYOND+'32-war-pick'},
+  {id:'w-warhammer',name:'Warhammer',section:'Weapons',category:'Martial Melee Weapons',cost:1500,costDisplay:'15 GP',weight:5,damage:'1d8 Bludgeoning',properties:'Versatile (1d10)',mastery:'Push',url:BEYOND+'33-warhammer'},
+  {id:'w-whip',name:'Whip',section:'Weapons',category:'Martial Melee Weapons',cost:200,costDisplay:'2 GP',weight:3,damage:'1d4 Slashing',properties:'Finesse, Reach',mastery:'Slow',url:BEYOND+'34-whip'},
+
+  // ─── MARTIAL RANGED WEAPONS ───
+  {id:'w-blowgun',name:'Blowgun',section:'Weapons',category:'Martial Ranged Weapons',cost:1000,costDisplay:'10 GP',weight:1,damage:'1 Piercing',properties:'Ammunition (25/100; Needle), Loading',mastery:'Vex',url:BEYOND+'35-blowgun'},
+  {id:'w-hand-crossbow',name:'Hand Crossbow',section:'Weapons',category:'Martial Ranged Weapons',cost:7500,costDisplay:'75 GP',weight:3,damage:'1d6 Piercing',properties:'Ammunition (30/120; Bolt), Light, Loading',mastery:'Vex',url:BEYOND+'1-crossbow-hand'},
+  {id:'w-heavy-crossbow',name:'Heavy Crossbow',section:'Weapons',category:'Martial Ranged Weapons',cost:5000,costDisplay:'50 GP',weight:18,damage:'1d10 Piercing',properties:'Ammunition (100/400; Bolt), Heavy, Loading, Two-Handed',mastery:'Push',url:BEYOND+'36-crossbow-heavy'},
+  {id:'w-longbow',name:'Longbow',section:'Weapons',category:'Martial Ranged Weapons',cost:5000,costDisplay:'50 GP',weight:2,damage:'1d8 Piercing',properties:'Ammunition (150/600; Arrow), Heavy, Two-Handed',mastery:'Slow',url:BEYOND+'37-longbow'},
+  {id:'w-musket',name:'Musket',section:'Weapons',category:'Martial Ranged Weapons',cost:50000,costDisplay:'500 GP',weight:10,damage:'1d12 Piercing',properties:'Ammunition (40/120; Bullet), Loading, Two-Handed',mastery:'Slow',url:BEYOND+'43-musket'},
+  {id:'w-pistol',name:'Pistol',section:'Weapons',category:'Martial Ranged Weapons',cost:25000,costDisplay:'250 GP',weight:3,damage:'1d10 Piercing',properties:'Ammunition (30/90; Bullet), Loading',mastery:'Vex',url:BEYOND+'42-pistol'},
+
+  // ─── LIGHT ARMOR ───
+  {id:'a-padded',name:'Padded Armor',section:'Armor',category:'Light Armor',cost:500,costDisplay:'5 GP',weight:8,ac:'11 + Dex modifier',stealthDisadv:true,url:BEYOND+'9-padded'},
+  {id:'a-leather',name:'Leather Armor',section:'Armor',category:'Light Armor',cost:1000,costDisplay:'10 GP',weight:10,ac:'11 + Dex modifier',stealthDisadv:false,url:BEYOND+'10-leather'},
+  {id:'a-studded-leather',name:'Studded Leather Armor',section:'Armor',category:'Light Armor',cost:4500,costDisplay:'45 GP',weight:13,ac:'12 + Dex modifier',stealthDisadv:false,url:BEYOND+'3-studded-leather'},
+
+  // ─── MEDIUM ARMOR ───
+  {id:'a-hide',name:'Hide Armor',section:'Armor',category:'Medium Armor',cost:1000,costDisplay:'10 GP',weight:12,ac:'12 + Dex modifier (max 2)',stealthDisadv:false,url:BEYOND+'11-hide'},
+  {id:'a-chain-shirt',name:'Chain Shirt',section:'Armor',category:'Medium Armor',cost:5000,costDisplay:'50 GP',weight:20,ac:'13 + Dex modifier (max 2)',stealthDisadv:false,url:BEYOND+'12-chain-shirt'},
+  {id:'a-scale-mail',name:'Scale Mail',section:'Armor',category:'Medium Armor',cost:5000,costDisplay:'50 GP',weight:45,ac:'14 + Dex modifier (max 2)',stealthDisadv:true,url:BEYOND+'6-scale-mail'},
+  {id:'a-breastplate',name:'Breastplate',section:'Armor',category:'Medium Armor',cost:40000,costDisplay:'400 GP',weight:20,ac:'14 + Dex modifier (max 2)',stealthDisadv:false,url:BEYOND+'13-breastplate'},
+  {id:'a-half-plate',name:'Half Plate Armor',section:'Armor',category:'Medium Armor',cost:75000,costDisplay:'750 GP',weight:40,ac:'15 + Dex modifier (max 2)',stealthDisadv:true,url:BEYOND+'14-half-plate'},
+
+  // ─── HEAVY ARMOR ───
+  {id:'a-ring-mail',name:'Ring Mail',section:'Armor',category:'Heavy Armor',cost:3000,costDisplay:'30 GP',weight:40,ac:'14',stealthDisadv:true,url:BEYOND+'15-ring-mail'},
+  {id:'a-chain-mail',name:'Chain Mail',section:'Armor',category:'Heavy Armor',cost:7500,costDisplay:'75 GP',weight:55,ac:'16',strReq:13,stealthDisadv:true,url:BEYOND+'16-chain-mail'},
+  {id:'a-splint',name:'Splint Armor',section:'Armor',category:'Heavy Armor',cost:20000,costDisplay:'200 GP',weight:60,ac:'17',strReq:15,stealthDisadv:true,url:BEYOND+'17-splint'},
+  {id:'a-plate',name:'Plate Armor',section:'Armor',category:'Heavy Armor',cost:150000,costDisplay:'1,500 GP',weight:65,ac:'18',strReq:15,stealthDisadv:true,url:BEYOND+'18-plate'},
+
+  // ─── SHIELD ───
+  {id:'a-shield',name:'Shield',section:'Armor',category:'Shield',cost:1000,costDisplay:'10 GP',weight:6,ac:'+2',stealthDisadv:false,url:BEYOND+'8-shield'},
+
+  // ─── ARTISAN'S TOOLS ───
+  {id:'t-alchemists-supplies',name:"Alchemist's Supplies",section:'Tools',category:"Artisan's Tools",cost:5000,costDisplay:'50 GP',weight:8,url:BEYOND+'397-alchemists-supplies'},
+  {id:'t-brewers-supplies',name:"Brewer's Supplies",section:'Tools',category:"Artisan's Tools",cost:2000,costDisplay:'20 GP',weight:9,url:SEARCH+"Brewer's+Supplies"},
+  {id:'t-calligraphers-supplies',name:"Calligrapher's Supplies",section:'Tools',category:"Artisan's Tools",cost:1000,costDisplay:'10 GP',weight:5,url:SEARCH+"Calligrapher's+Supplies"},
+  {id:'t-carpenters-tools',name:"Carpenter's Tools",section:'Tools',category:"Artisan's Tools",cost:800,costDisplay:'8 GP',weight:6,url:SEARCH+"Carpenter's+Tools"},
+  {id:'t-cartographers-tools',name:"Cartographer's Tools",section:'Tools',category:"Artisan's Tools",cost:1500,costDisplay:'15 GP',weight:6,url:SEARCH+"Cartographer's+Tools"},
+  {id:'t-cobblers-tools',name:"Cobbler's Tools",section:'Tools',category:"Artisan's Tools",cost:500,costDisplay:'5 GP',weight:5,url:SEARCH+"Cobbler's+Tools"},
+  {id:'t-cooks-utensils',name:"Cook's Utensils",section:'Tools',category:"Artisan's Tools",cost:100,costDisplay:'1 GP',weight:8,url:SEARCH+"Cook's+Utensils"},
+  {id:'t-glassblowers-tools',name:"Glassblower's Tools",section:'Tools',category:"Artisan's Tools",cost:3000,costDisplay:'30 GP',weight:5,url:SEARCH+"Glassblower's+Tools"},
+  {id:'t-jewelers-tools',name:"Jeweler's Tools",section:'Tools',category:"Artisan's Tools",cost:2500,costDisplay:'25 GP',weight:2,url:SEARCH+"Jeweler's+Tools"},
+  {id:'t-leatherworkers-tools',name:"Leatherworker's Tools",section:'Tools',category:"Artisan's Tools",cost:500,costDisplay:'5 GP',weight:5,url:SEARCH+"Leatherworker's+Tools"},
+  {id:'t-masons-tools',name:"Mason's Tools",section:'Tools',category:"Artisan's Tools",cost:1000,costDisplay:'10 GP',weight:8,url:BEYOND+'112-masons-tools'},
+  {id:'t-painters-supplies',name:"Painter's Supplies",section:'Tools',category:"Artisan's Tools",cost:1000,costDisplay:'10 GP',weight:5,url:SEARCH+"Painter's+Supplies"},
+  {id:'t-potters-tools',name:"Potter's Tools",section:'Tools',category:"Artisan's Tools",cost:1000,costDisplay:'10 GP',weight:3,url:SEARCH+"Potter's+Tools"},
+  {id:'t-smiths-tools',name:"Smith's Tools",section:'Tools',category:"Artisan's Tools",cost:2000,costDisplay:'20 GP',weight:8,url:BEYOND+'438-smiths-tools'},
+  {id:'t-tinkers-tools',name:"Tinker's Tools",section:'Tools',category:"Artisan's Tools",cost:5000,costDisplay:'50 GP',weight:10,url:BEYOND+'441-tinkers-tools'},
+  {id:'t-weavers-tools',name:"Weaver's Tools",section:'Tools',category:"Artisan's Tools",cost:100,costDisplay:'1 GP',weight:5,url:BEYOND+'117-weavers-tools'},
+  {id:'t-woodcarvers-tools',name:"Woodcarver's Tools",section:'Tools',category:"Artisan's Tools",cost:100,costDisplay:'1 GP',weight:5,url:BEYOND+'118-woodcarvers-tools'},
+
+  // ─── OTHER TOOLS ───
+  {id:'t-disguise-kit',name:'Disguise Kit',section:'Tools',category:'Other Tools',cost:2500,costDisplay:'25 GP',weight:3,url:SEARCH+'Disguise+Kit'},
+  {id:'t-forgery-kit',name:'Forgery Kit',section:'Tools',category:'Other Tools',cost:1500,costDisplay:'15 GP',weight:5,url:SEARCH+'Forgery+Kit'},
+  {id:'t-herbalism-kit',name:'Herbalism Kit',section:'Tools',category:'Other Tools',cost:500,costDisplay:'5 GP',weight:3,url:BEYOND+'123-herbalism-kit'},
+  {id:'t-navigators-tools',name:"Navigator's Tools",section:'Tools',category:'Other Tools',cost:2500,costDisplay:'25 GP',weight:2,url:SEARCH+"Navigator's+Tools"},
+  {id:'t-poisoners-kit',name:"Poisoner's Kit",section:'Tools',category:'Other Tools',cost:5000,costDisplay:'50 GP',weight:2,url:SEARCH+"Poisoner's+Kit"},
+  {id:'t-thieves-tools',name:"Thieves' Tools",section:'Tools',category:'Other Tools',cost:2500,costDisplay:'25 GP',weight:1,url:BEYOND+'495-thieves-tools'},
+
+  // ─── GAMING SETS ───
+  {id:'t-dice-set',name:'Dice Set',section:'Tools',category:'Gaming Sets',cost:10,costDisplay:'1 SP',weight:0,url:SEARCH+'Dice+Set'},
+  {id:'t-dragonchess-set',name:'Dragonchess Set',section:'Tools',category:'Gaming Sets',cost:100,costDisplay:'1 GP',weight:0,url:SEARCH+'Dragonchess+Set'},
+  {id:'t-playing-card-set',name:'Playing Card Set',section:'Tools',category:'Gaming Sets',cost:50,costDisplay:'5 SP',weight:0,url:SEARCH+'Playing+Card+Set'},
+  {id:'t-three-dragon-ante',name:'Three-Dragon Ante Set',section:'Tools',category:'Gaming Sets',cost:100,costDisplay:'1 GP',weight:0,url:SEARCH+'Three-Dragon+Ante'},
+
+  // ─── MUSICAL INSTRUMENTS ───
+  {id:'t-bagpipes',name:'Bagpipes',section:'Tools',category:'Musical Instruments',cost:3000,costDisplay:'30 GP',weight:6,url:SEARCH+'Bagpipes'},
+  {id:'t-drum',name:'Drum',section:'Tools',category:'Musical Instruments',cost:600,costDisplay:'6 GP',weight:3,url:SEARCH+'Drum'},
+  {id:'t-dulcimer',name:'Dulcimer',section:'Tools',category:'Musical Instruments',cost:2500,costDisplay:'25 GP',weight:10,url:SEARCH+'Dulcimer'},
+  {id:'t-flute',name:'Flute',section:'Tools',category:'Musical Instruments',cost:200,costDisplay:'2 GP',weight:1,url:SEARCH+'Flute'},
+  {id:'t-horn',name:'Horn',section:'Tools',category:'Musical Instruments',cost:300,costDisplay:'3 GP',weight:2,url:SEARCH+'Horn'},
+  {id:'t-lute',name:'Lute',section:'Tools',category:'Musical Instruments',cost:3500,costDisplay:'35 GP',weight:2,url:SEARCH+'Lute'},
+  {id:'t-lyre',name:'Lyre',section:'Tools',category:'Musical Instruments',cost:3000,costDisplay:'30 GP',weight:2,url:SEARCH+'Lyre'},
+  {id:'t-pan-flute',name:'Pan Flute',section:'Tools',category:'Musical Instruments',cost:1200,costDisplay:'12 GP',weight:2,url:SEARCH+'Pan+Flute'},
+  {id:'t-shawm',name:'Shawm',section:'Tools',category:'Musical Instruments',cost:200,costDisplay:'2 GP',weight:1,url:SEARCH+'Shawm'},
+  {id:'t-viol',name:'Viol',section:'Tools',category:'Musical Instruments',cost:3000,costDisplay:'30 GP',weight:1,url:SEARCH+'Viol'},
+
+  // ─── ADVENTURING GEAR ───
+  {id:'g-acid',name:'Acid',section:'Gear',category:'Adventuring Gear',cost:2500,costDisplay:'25 GP',weight:1,url:BEYOND+'500-acid'},
+  {id:'g-alchemists-fire',name:"Alchemist's Fire",section:'Gear',category:'Adventuring Gear',cost:5000,costDisplay:'50 GP',weight:1,url:BEYOND+'504-alchemists-fire'},
+  {id:'g-antitoxin',name:'Antitoxin',section:'Gear',category:'Adventuring Gear',cost:5000,costDisplay:'50 GP',weight:0,url:BEYOND+'520-antitoxin'},
+  {id:'g-backpack',name:'Backpack',section:'Gear',category:'Adventuring Gear',cost:200,costDisplay:'2 GP',weight:5,url:BEYOND+'20-backpack'},
+  {id:'g-ball-bearings',name:'Ball Bearings',section:'Gear',category:'Adventuring Gear',cost:100,costDisplay:'1 GP',weight:2,url:SEARCH+'Ball+Bearings'},
+  {id:'g-barrel',name:'Barrel',section:'Gear',category:'Adventuring Gear',cost:200,costDisplay:'2 GP',weight:70,url:SEARCH+'Barrel'},
+  {id:'g-basket',name:'Basket',section:'Gear',category:'Adventuring Gear',cost:40,costDisplay:'4 SP',weight:2,url:SEARCH+'Basket'},
+  {id:'g-bedroll',name:'Bedroll',section:'Gear',category:'Adventuring Gear',cost:100,costDisplay:'1 GP',weight:7,url:SEARCH+'Bedroll'},
+  {id:'g-bell',name:'Bell',section:'Gear',category:'Adventuring Gear',cost:100,costDisplay:'1 GP',weight:0,url:SEARCH+'Bell'},
+  {id:'g-blanket',name:'Blanket',section:'Gear',category:'Adventuring Gear',cost:50,costDisplay:'5 SP',weight:3,url:SEARCH+'Blanket'},
+  {id:'g-block-and-tackle',name:'Block and Tackle',section:'Gear',category:'Adventuring Gear',cost:100,costDisplay:'1 GP',weight:5,url:SEARCH+'Block+and+Tackle'},
+  {id:'g-book',name:'Book',section:'Gear',category:'Adventuring Gear',cost:2500,costDisplay:'25 GP',weight:5,url:SEARCH+'Book'},
+  {id:'g-bottle-glass',name:'Bottle, Glass',section:'Gear',category:'Adventuring Gear',cost:200,costDisplay:'2 GP',weight:2,url:SEARCH+'Glass+Bottle'},
+  {id:'g-bucket',name:'Bucket',section:'Gear',category:'Adventuring Gear',cost:5,costDisplay:'5 CP',weight:2,url:SEARCH+'Bucket'},
+  {id:'g-caltrops',name:'Caltrops',section:'Gear',category:'Adventuring Gear',cost:100,costDisplay:'1 GP',weight:2,url:BEYOND+'497-caltrops'},
+  {id:'g-candle',name:'Candle',section:'Gear',category:'Adventuring Gear',cost:1,costDisplay:'1 CP',weight:0,url:SEARCH+'Candle'},
+  {id:'g-case-crossbow-bolt',name:'Case, Crossbow Bolt',section:'Gear',category:'Adventuring Gear',cost:100,costDisplay:'1 GP',weight:1,url:BEYOND+'505-crossbow-bolt-case'},
+  {id:'g-case-map-scroll',name:'Case, Map or Scroll',section:'Gear',category:'Adventuring Gear',cost:100,costDisplay:'1 GP',weight:1,url:SEARCH+'Map+or+Scroll+Case'},
+  {id:'g-chain',name:'Chain',section:'Gear',category:'Adventuring Gear',cost:500,costDisplay:'5 GP',weight:10,url:SEARCH+'Chain'},
+  {id:'g-chest',name:'Chest',section:'Gear',category:'Adventuring Gear',cost:500,costDisplay:'5 GP',weight:25,url:SEARCH+'Chest'},
+  {id:'g-climbers-kit',name:"Climber's Kit",section:'Gear',category:'Adventuring Gear',cost:2500,costDisplay:'25 GP',weight:12,url:SEARCH+"Climber's+Kit"},
+  {id:'g-clothes-fine',name:'Clothes, Fine',section:'Gear',category:'Adventuring Gear',cost:1500,costDisplay:'15 GP',weight:6,url:SEARCH+'Fine+Clothes'},
+  {id:'g-clothes-travelers',name:"Clothes, Traveler's",section:'Gear',category:'Adventuring Gear',cost:200,costDisplay:'2 GP',weight:4,url:SEARCH+"Traveler's+Clothes"},
+  {id:'g-component-pouch',name:'Component Pouch',section:'Gear',category:'Adventuring Gear',cost:2500,costDisplay:'25 GP',weight:2,url:SEARCH+'Component+Pouch'},
+  {id:'g-costume',name:'Costume',section:'Gear',category:'Adventuring Gear',cost:500,costDisplay:'5 GP',weight:4,url:SEARCH+'Costume'},
+  {id:'g-crowbar',name:'Crowbar',section:'Gear',category:'Adventuring Gear',cost:200,costDisplay:'2 GP',weight:5,url:SEARCH+'Crowbar'},
+  {id:'g-flask',name:'Flask',section:'Gear',category:'Adventuring Gear',cost:2,costDisplay:'2 CP',weight:1,url:SEARCH+'Flask'},
+  {id:'g-grappling-hook',name:'Grappling Hook',section:'Gear',category:'Adventuring Gear',cost:200,costDisplay:'2 GP',weight:4,url:SEARCH+'Grappling+Hook'},
+  {id:'g-healers-kit',name:"Healer's Kit",section:'Gear',category:'Adventuring Gear',cost:500,costDisplay:'5 GP',weight:3,url:BEYOND+'49-healers-kit'},
+  {id:'g-holy-water',name:'Holy Water',section:'Gear',category:'Adventuring Gear',cost:2500,costDisplay:'25 GP',weight:1,url:SEARCH+'Holy+Water'},
+  {id:'g-hunting-trap',name:'Hunting Trap',section:'Gear',category:'Adventuring Gear',cost:500,costDisplay:'5 GP',weight:25,url:SEARCH+'Hunting+Trap'},
+  {id:'g-ink',name:'Ink',section:'Gear',category:'Adventuring Gear',cost:1000,costDisplay:'10 GP',weight:0,url:SEARCH+'Ink'},
+  {id:'g-ink-pen',name:'Ink Pen',section:'Gear',category:'Adventuring Gear',cost:2,costDisplay:'2 CP',weight:0,url:SEARCH+'Ink+Pen'},
+  {id:'g-jug',name:'Jug',section:'Gear',category:'Adventuring Gear',cost:2,costDisplay:'2 CP',weight:4,url:SEARCH+'Jug'},
+  {id:'g-ladder',name:'Ladder',section:'Gear',category:'Adventuring Gear',cost:10,costDisplay:'1 SP',weight:25,url:SEARCH+'Ladder'},
+  {id:'g-lamp',name:'Lamp',section:'Gear',category:'Adventuring Gear',cost:50,costDisplay:'5 SP',weight:1,url:BEYOND+'496-lamp'},
+  {id:'g-lantern-bullseye',name:'Lantern, Bullseye',section:'Gear',category:'Adventuring Gear',cost:1000,costDisplay:'10 GP',weight:2,url:BEYOND+'494-bullseye-lantern'},
+  {id:'g-lantern-hooded',name:'Lantern, Hooded',section:'Gear',category:'Adventuring Gear',cost:500,costDisplay:'5 GP',weight:2,url:BEYOND+'493-hooded-lantern'},
+  {id:'g-lock',name:'Lock',section:'Gear',category:'Adventuring Gear',cost:1000,costDisplay:'10 GP',weight:1,url:SEARCH+'Lock'},
+  {id:'g-magnifying-glass',name:'Magnifying Glass',section:'Gear',category:'Adventuring Gear',cost:10000,costDisplay:'100 GP',weight:0,url:SEARCH+'Magnifying+Glass'},
+  {id:'g-manacles',name:'Manacles',section:'Gear',category:'Adventuring Gear',cost:200,costDisplay:'2 GP',weight:6,url:SEARCH+'Manacles'},
+  {id:'g-map',name:'Map',section:'Gear',category:'Adventuring Gear',cost:100,costDisplay:'1 GP',weight:0,url:SEARCH+'Map'},
+  {id:'g-mirror',name:'Mirror',section:'Gear',category:'Adventuring Gear',cost:500,costDisplay:'5 GP',weight:0.5,url:SEARCH+'Mirror'},
+  {id:'g-net',name:'Net',section:'Gear',category:'Adventuring Gear',cost:100,costDisplay:'1 GP',weight:3,url:SEARCH+'Net'},
+  {id:'g-oil',name:'Oil',section:'Gear',category:'Adventuring Gear',cost:10,costDisplay:'1 SP',weight:1,url:SEARCH+'Oil'},
+  {id:'g-paper',name:'Paper',section:'Gear',category:'Adventuring Gear',cost:20,costDisplay:'2 SP',weight:0,url:SEARCH+'Paper'},
+  {id:'g-parchment',name:'Parchment',section:'Gear',category:'Adventuring Gear',cost:10,costDisplay:'1 SP',weight:0,url:SEARCH+'Parchment'},
+  {id:'g-perfume',name:'Perfume',section:'Gear',category:'Adventuring Gear',cost:500,costDisplay:'5 GP',weight:0,url:SEARCH+'Perfume'},
+  {id:'g-poison-basic',name:'Poison, Basic',section:'Gear',category:'Adventuring Gear',cost:10000,costDisplay:'100 GP',weight:0,url:SEARCH+'Basic+Poison'},
+  {id:'g-pole',name:'Pole',section:'Gear',category:'Adventuring Gear',cost:5,costDisplay:'5 CP',weight:7,url:SEARCH+'Pole'},
+  {id:'g-pot-iron',name:'Pot, Iron',section:'Gear',category:'Adventuring Gear',cost:200,costDisplay:'2 GP',weight:10,url:SEARCH+'Iron+Pot'},
+  {id:'g-potion-of-healing',name:'Potion of Healing',section:'Gear',category:'Adventuring Gear',cost:5000,costDisplay:'50 GP',weight:0.5,url:BEYOND+'71-potion-of-healing'},
+  {id:'g-pouch',name:'Pouch',section:'Gear',category:'Adventuring Gear',cost:50,costDisplay:'5 SP',weight:1,url:SEARCH+'Pouch'},
+  {id:'g-quiver',name:'Quiver',section:'Gear',category:'Adventuring Gear',cost:100,costDisplay:'1 GP',weight:1,url:SEARCH+'Quiver'},
+  {id:'g-ram-portable',name:'Ram, Portable',section:'Gear',category:'Adventuring Gear',cost:400,costDisplay:'4 GP',weight:35,url:SEARCH+'Portable+Ram'},
+  {id:'g-rations',name:'Rations (1 day)',section:'Gear',category:'Adventuring Gear',cost:50,costDisplay:'5 SP',weight:2,url:BEYOND+'411-rations'},
+  {id:'g-robe',name:'Robe',section:'Gear',category:'Adventuring Gear',cost:100,costDisplay:'1 GP',weight:4,url:SEARCH+'Robe'},
+  {id:'g-rope',name:'Rope (50 ft.)',section:'Gear',category:'Adventuring Gear',cost:100,costDisplay:'1 GP',weight:5,url:BEYOND+'415-rope'},
+  {id:'g-sack',name:'Sack',section:'Gear',category:'Adventuring Gear',cost:1,costDisplay:'1 CP',weight:0.5,url:SEARCH+'Sack'},
+  {id:'g-shovel',name:'Shovel',section:'Gear',category:'Adventuring Gear',cost:200,costDisplay:'2 GP',weight:5,url:SEARCH+'Shovel'},
+  {id:'g-signal-whistle',name:'Signal Whistle',section:'Gear',category:'Adventuring Gear',cost:5,costDisplay:'5 CP',weight:0,url:SEARCH+'Signal+Whistle'},
+  {id:'g-spikes-iron',name:'Spikes, Iron (10)',section:'Gear',category:'Adventuring Gear',cost:100,costDisplay:'1 GP',weight:5,url:BEYOND+'426-iron-spikes'},
+  {id:'g-spyglass',name:'Spyglass',section:'Gear',category:'Adventuring Gear',cost:100000,costDisplay:'1,000 GP',weight:1,url:SEARCH+'Spyglass'},
+  {id:'g-string',name:'String (10 ft.)',section:'Gear',category:'Adventuring Gear',cost:10,costDisplay:'1 SP',weight:0,url:SEARCH+'String'},
+  {id:'g-tent',name:'Tent',section:'Gear',category:'Adventuring Gear',cost:200,costDisplay:'2 GP',weight:20,url:SEARCH+'Tent'},
+  {id:'g-tinderbox',name:'Tinderbox',section:'Gear',category:'Adventuring Gear',cost:50,costDisplay:'5 SP',weight:1,url:BEYOND+'434-tinderbox'},
+  {id:'g-torch',name:'Torch',section:'Gear',category:'Adventuring Gear',cost:1,costDisplay:'1 CP',weight:1,url:BEYOND+'437-torch'},
+  {id:'g-vial',name:'Vial',section:'Gear',category:'Adventuring Gear',cost:100,costDisplay:'1 GP',weight:0,url:SEARCH+'Vial'},
+  {id:'g-waterskin',name:'Waterskin',section:'Gear',category:'Adventuring Gear',cost:20,costDisplay:'2 SP',weight:5,url:BEYOND+'92-waterskin'},
+
+  // ─── AMMUNITION ───
+  {id:'g-arrows',name:'Arrows (20)',section:'Gear',category:'Ammunition',cost:100,costDisplay:'1 GP',weight:1,url:SEARCH+'Arrows'},
+  {id:'g-bolts',name:'Bolts (20)',section:'Gear',category:'Ammunition',cost:100,costDisplay:'1 GP',weight:1.5,url:BEYOND+'510-bolts'},
+  {id:'g-bullets-firearm',name:'Bullets, Firearm (10)',section:'Gear',category:'Ammunition',cost:300,costDisplay:'3 GP',weight:2,url:SEARCH+'Firearm+Bullets'},
+  {id:'g-bullets-sling',name:'Bullets, Sling (20)',section:'Gear',category:'Ammunition',cost:4,costDisplay:'4 CP',weight:1.5,url:BEYOND+'4-sling-bullets'},
+  {id:'g-needles',name:'Needles, Blowgun (50)',section:'Gear',category:'Ammunition',cost:100,costDisplay:'1 GP',weight:1,url:BEYOND+'2-blowgun-needles'},
+
+  // ─── ARCANE FOCUSES ───
+  {id:'g-crystal',name:'Crystal',section:'Gear',category:'Arcane Focuses',cost:1000,costDisplay:'10 GP',weight:1,url:SEARCH+'Crystal+Arcane+Focus'},
+  {id:'g-orb',name:'Orb',section:'Gear',category:'Arcane Focuses',cost:2000,costDisplay:'20 GP',weight:3,url:SEARCH+'Orb+Arcane+Focus'},
+  {id:'g-rod',name:'Rod',section:'Gear',category:'Arcane Focuses',cost:1000,costDisplay:'10 GP',weight:2,url:SEARCH+'Rod+Arcane+Focus'},
+  {id:'g-staff-arcane',name:'Staff (Arcane Focus)',section:'Gear',category:'Arcane Focuses',cost:500,costDisplay:'5 GP',weight:4,note:'Also a Quarterstaff',url:SEARCH+'Staff+Arcane+Focus'},
+  {id:'g-wand',name:'Wand',section:'Gear',category:'Arcane Focuses',cost:1000,costDisplay:'10 GP',weight:1,url:SEARCH+'Wand+Arcane+Focus'},
+
+  // ─── DRUIDIC FOCUSES ───
+  {id:'g-sprig-mistletoe',name:'Sprig of Mistletoe',section:'Gear',category:'Druidic Focuses',cost:100,costDisplay:'1 GP',weight:0,url:SEARCH+'Sprig+of+Mistletoe'},
+  {id:'g-staff-druidic',name:'Wooden Staff (Druidic Focus)',section:'Gear',category:'Druidic Focuses',cost:500,costDisplay:'5 GP',weight:4,note:'Also a Quarterstaff',url:SEARCH+'Wooden+Staff+Druidic'},
+  {id:'g-yew-wand',name:'Yew Wand',section:'Gear',category:'Druidic Focuses',cost:1000,costDisplay:'10 GP',weight:1,url:SEARCH+'Yew+Wand'},
+
+  // ─── HOLY SYMBOLS ───
+  {id:'g-amulet',name:'Amulet (Holy Symbol)',section:'Gear',category:'Holy Symbols',cost:500,costDisplay:'5 GP',weight:1,note:'Worn or held',url:SEARCH+'Amulet+Holy+Symbol'},
+  {id:'g-emblem',name:'Emblem (Holy Symbol)',section:'Gear',category:'Holy Symbols',cost:500,costDisplay:'5 GP',weight:0,note:'Borne on fabric or Shield',url:SEARCH+'Emblem+Holy+Symbol'},
+  {id:'g-reliquary',name:'Reliquary (Holy Symbol)',section:'Gear',category:'Holy Symbols',cost:500,costDisplay:'5 GP',weight:2,note:'Held',url:SEARCH+'Reliquary+Holy+Symbol'},
+
+  // ─── EQUIPMENT PACKS ───
+  {id:'g-burglars-pack',name:"Burglar's Pack",section:'Gear',category:'Equipment Packs',cost:1600,costDisplay:'16 GP',weight:42,contents:'Backpack, Ball Bearings, Bell, 10 Candles, Crowbar, Hooded Lantern, 7 flasks of Oil, 5 days of Rations, Rope, Tinderbox, Waterskin',url:BEYOND+'95-burglars-pack'},
+  {id:'g-diplomats-pack',name:"Diplomat's Pack",section:'Gear',category:'Equipment Packs',cost:3900,costDisplay:'39 GP',weight:39,contents:'Chest, Fine Clothes, Ink, 5 Ink Pens, Lamp, 2 Map or Scroll Cases, 4 flasks of Oil, 5 sheets of Paper, 5 sheets of Parchment, Perfume, Tinderbox',url:SEARCH+"Diplomat's+Pack"},
+  {id:'g-dungeoneers-pack',name:"Dungeoneer's Pack",section:'Gear',category:'Equipment Packs',cost:1200,costDisplay:'12 GP',weight:55,contents:'Backpack, Caltrops, Crowbar, 2 flasks of Oil, 10 days of Rations, Rope, Tinderbox, 10 Torches, Waterskin',url:BEYOND+'525-dungeoneers-pack'},
+  {id:'g-entertainers-pack',name:"Entertainer's Pack",section:'Gear',category:'Equipment Packs',cost:4000,costDisplay:'40 GP',weight:58.5,contents:'Backpack, Bedroll, Bell, Bullseye Lantern, 3 Costumes, Mirror, 8 flasks of Oil, 9 days of Rations, Tinderbox, Waterskin',url:BEYOND+'524-entertainers-pack'},
+  {id:'g-explorers-pack',name:"Explorer's Pack",section:'Gear',category:'Equipment Packs',cost:1000,costDisplay:'10 GP',weight:55,contents:'Backpack, Bedroll, 2 flasks of Oil, 10 days of Rations, Rope, Tinderbox, 10 Torches, Waterskin',url:BEYOND+'99-explorers-pack'},
+  {id:'g-priests-pack',name:"Priest's Pack",section:'Gear',category:'Equipment Packs',cost:3300,costDisplay:'33 GP',weight:29,contents:'Backpack, Blanket, Holy Water, Lamp, 7 days of Rations, Robe, Tinderbox',url:BEYOND+'100-priests-pack'},
+  {id:'g-scholars-pack',name:"Scholar's Pack",section:'Gear',category:'Equipment Packs',cost:4000,costDisplay:'40 GP',weight:22,contents:'Backpack, Book, Ink, Ink Pen, Lamp, 10 flasks of Oil, 10 sheets of Parchment, Tinderbox',url:BEYOND+'418-scholars-pack'},
+
+  // ─── SPELL SCROLLS ───
+  {id:'g-spell-scroll-cantrip',name:'Spell Scroll (Cantrip)',section:'Gear',category:'Adventuring Gear',cost:3000,costDisplay:'30 GP',weight:0,note:'Magic item',url:SEARCH+'Spell+Scroll+Cantrip'},
+  {id:'g-spell-scroll-1',name:'Spell Scroll (Level 1)',section:'Gear',category:'Adventuring Gear',cost:5000,costDisplay:'50 GP',weight:0,note:'Magic item',url:SEARCH+'Spell+Scroll+Level+1'},
+
+  // ─── MOUNTS & ANIMALS ───
+  {id:'m-camel',name:'Camel',section:'Mounts & Vehicles',category:'Mounts & Animals',cost:5000,costDisplay:'50 GP',weight:0,note:'Carry capacity: 450 lb.',url:BEYOND+'162-camel'},
+  {id:'m-elephant',name:'Elephant',section:'Mounts & Vehicles',category:'Mounts & Animals',cost:20000,costDisplay:'200 GP',weight:0,note:'Carry capacity: 1,320 lb.',url:BEYOND+'164-elephant'},
+  {id:'m-horse-draft',name:'Horse, Draft',section:'Mounts & Vehicles',category:'Mounts & Animals',cost:5000,costDisplay:'50 GP',weight:0,note:'Carry capacity: 540 lb.',url:BEYOND+'165-draft-horse'},
+  {id:'m-horse-riding',name:'Horse, Riding',section:'Mounts & Vehicles',category:'Mounts & Animals',cost:7500,costDisplay:'75 GP',weight:0,note:'Carry capacity: 480 lb.',url:BEYOND+'166-riding-horse'},
+  {id:'m-mastiff',name:'Mastiff',section:'Mounts & Vehicles',category:'Mounts & Animals',cost:2500,costDisplay:'25 GP',weight:0,note:'Carry capacity: 195 lb.',url:BEYOND+'167-mastiff'},
+  {id:'m-mule',name:'Mule',section:'Mounts & Vehicles',category:'Mounts & Animals',cost:800,costDisplay:'8 GP',weight:0,note:'Carry capacity: 420 lb.',url:BEYOND+'163-donkey-or-mule'},
+  {id:'m-pony',name:'Pony',section:'Mounts & Vehicles',category:'Mounts & Animals',cost:3000,costDisplay:'30 GP',weight:0,note:'Carry capacity: 225 lb.',url:SEARCH+'Pony'},
+  {id:'m-warhorse',name:'Warhorse',section:'Mounts & Vehicles',category:'Mounts & Animals',cost:40000,costDisplay:'400 GP',weight:0,note:'Carry capacity: 540 lb.',url:BEYOND+'169-warhorse'},
+
+  // ─── TACK, HARNESS & DRAWN VEHICLES ───
+  {id:'m-carriage',name:'Carriage',section:'Mounts & Vehicles',category:'Tack, Harness & Vehicles',cost:10000,costDisplay:'100 GP',weight:600,url:BEYOND+'456-carriage'},
+  {id:'m-cart',name:'Cart',section:'Mounts & Vehicles',category:'Tack, Harness & Vehicles',cost:1500,costDisplay:'15 GP',weight:200,url:BEYOND+'457-cart'},
+  {id:'m-chariot',name:'Chariot',section:'Mounts & Vehicles',category:'Tack, Harness & Vehicles',cost:25000,costDisplay:'250 GP',weight:100,url:BEYOND+'459-chariot'},
+  {id:'m-feed',name:'Feed (per day)',section:'Mounts & Vehicles',category:'Tack, Harness & Vehicles',cost:5,costDisplay:'5 CP',weight:10,url:SEARCH+'Feed'},
+  {id:'m-saddle-exotic',name:'Saddle, Exotic',section:'Mounts & Vehicles',category:'Tack, Harness & Vehicles',cost:6000,costDisplay:'60 GP',weight:40,url:BEYOND+'185-saddle-exotic'},
+  {id:'m-saddle-military',name:'Saddle, Military',section:'Mounts & Vehicles',category:'Tack, Harness & Vehicles',cost:2000,costDisplay:'20 GP',weight:30,url:BEYOND+'465-military-saddle'},
+  {id:'m-saddle-riding',name:'Saddle, Riding',section:'Mounts & Vehicles',category:'Tack, Harness & Vehicles',cost:1000,costDisplay:'10 GP',weight:25,url:BEYOND+'188-saddle-riding'},
+  {id:'m-sled',name:'Sled',section:'Mounts & Vehicles',category:'Tack, Harness & Vehicles',cost:2000,costDisplay:'20 GP',weight:300,url:BEYOND+'468-sled'},
+  {id:'m-stabling',name:'Stabling (per day)',section:'Mounts & Vehicles',category:'Tack, Harness & Vehicles',cost:50,costDisplay:'5 SP',weight:0,url:SEARCH+'Stabling'},
+  {id:'m-wagon',name:'Wagon',section:'Mounts & Vehicles',category:'Tack, Harness & Vehicles',cost:3500,costDisplay:'35 GP',weight:400,url:BEYOND+'469-wagon'},
+
+  // ─── WATERBORNE & AIRBORNE VEHICLES ───
+  {id:'m-airship',name:'Airship',section:'Mounts & Vehicles',category:'Ships',cost:4000000,costDisplay:'40,000 GP',weight:0,note:'Speed 8 mph, Crew 10, Passengers 20',url:SEARCH+'Airship'},
+  {id:'m-galley',name:'Galley',section:'Mounts & Vehicles',category:'Ships',cost:3000000,costDisplay:'30,000 GP',weight:0,note:'Speed 4 mph, Crew 80',url:SEARCH+'Galley'},
+  {id:'m-keelboat',name:'Keelboat',section:'Mounts & Vehicles',category:'Ships',cost:300000,costDisplay:'3,000 GP',weight:0,note:'Speed 1 mph, Crew 1, Passengers 6',url:SEARCH+'Keelboat'},
+  {id:'m-longship',name:'Longship',section:'Mounts & Vehicles',category:'Ships',cost:1000000,costDisplay:'10,000 GP',weight:0,note:'Speed 3 mph, Crew 40, Passengers 150',url:SEARCH+'Longship'},
+  {id:'m-rowboat',name:'Rowboat',section:'Mounts & Vehicles',category:'Ships',cost:5000,costDisplay:'50 GP',weight:100,note:'Speed 1\u00BD mph, Crew 1, Passengers 3',url:SEARCH+'Rowboat'},
+  {id:'m-sailing-ship',name:'Sailing Ship',section:'Mounts & Vehicles',category:'Ships',cost:1000000,costDisplay:'10,000 GP',weight:0,note:'Speed 2 mph, Crew 20, Passengers 20',url:SEARCH+'Sailing+Ship'},
+  {id:'m-warship',name:'Warship',section:'Mounts & Vehicles',category:'Ships',cost:2500000,costDisplay:'25,000 GP',weight:0,note:'Speed 2\u00BD mph, Crew 60, Passengers 60',url:SEARCH+'Warship'},
+
+  // ─── FOOD, DRINK & LODGING ───
+  {id:'s-ale',name:'Ale (mug)',section:'Services',category:'Food, Drink & Lodging',cost:4,costDisplay:'4 CP',weight:0},
+  {id:'s-bread',name:'Bread (loaf)',section:'Services',category:'Food, Drink & Lodging',cost:2,costDisplay:'2 CP',weight:0},
+  {id:'s-cheese',name:'Cheese (wedge)',section:'Services',category:'Food, Drink & Lodging',cost:10,costDisplay:'1 SP',weight:0},
+  {id:'s-wine-common',name:'Wine, Common (bottle)',section:'Services',category:'Food, Drink & Lodging',cost:20,costDisplay:'2 SP',weight:0},
+  {id:'s-wine-fine',name:'Wine, Fine (bottle)',section:'Services',category:'Food, Drink & Lodging',cost:1000,costDisplay:'10 GP',weight:0},
+  {id:'s-inn-squalid',name:'Inn Stay, Squalid (per day)',section:'Services',category:'Food, Drink & Lodging',cost:7,costDisplay:'7 CP',weight:0},
+  {id:'s-inn-poor',name:'Inn Stay, Poor (per day)',section:'Services',category:'Food, Drink & Lodging',cost:10,costDisplay:'1 SP',weight:0},
+  {id:'s-inn-modest',name:'Inn Stay, Modest (per day)',section:'Services',category:'Food, Drink & Lodging',cost:50,costDisplay:'5 SP',weight:0},
+  {id:'s-inn-comfortable',name:'Inn Stay, Comfortable (per day)',section:'Services',category:'Food, Drink & Lodging',cost:80,costDisplay:'8 SP',weight:0},
+  {id:'s-inn-wealthy',name:'Inn Stay, Wealthy (per day)',section:'Services',category:'Food, Drink & Lodging',cost:200,costDisplay:'2 GP',weight:0},
+  {id:'s-inn-aristocratic',name:'Inn Stay, Aristocratic (per day)',section:'Services',category:'Food, Drink & Lodging',cost:400,costDisplay:'4 GP',weight:0},
+  {id:'s-meal-squalid',name:'Meal, Squalid',section:'Services',category:'Food, Drink & Lodging',cost:1,costDisplay:'1 CP',weight:0},
+  {id:'s-meal-poor',name:'Meal, Poor',section:'Services',category:'Food, Drink & Lodging',cost:2,costDisplay:'2 CP',weight:0},
+  {id:'s-meal-modest',name:'Meal, Modest',section:'Services',category:'Food, Drink & Lodging',cost:10,costDisplay:'1 SP',weight:0},
+  {id:'s-meal-comfortable',name:'Meal, Comfortable',section:'Services',category:'Food, Drink & Lodging',cost:20,costDisplay:'2 SP',weight:0},
+  {id:'s-meal-wealthy',name:'Meal, Wealthy',section:'Services',category:'Food, Drink & Lodging',cost:30,costDisplay:'3 SP',weight:0},
+  {id:'s-meal-aristocratic',name:'Meal, Aristocratic',section:'Services',category:'Food, Drink & Lodging',cost:60,costDisplay:'6 SP',weight:0},
+
+  // ─── HIRELINGS ───
+  {id:'s-hireling-skilled',name:'Skilled Hireling (per day)',section:'Services',category:'Hirelings',cost:200,costDisplay:'2 GP',weight:0},
+  {id:'s-hireling-untrained',name:'Untrained Hireling (per day)',section:'Services',category:'Hirelings',cost:20,costDisplay:'2 SP',weight:0},
+  {id:'s-messenger',name:'Messenger (per mile)',section:'Services',category:'Hirelings',cost:2,costDisplay:'2 CP',weight:0},
+
+  // ─── SPELLCASTING SERVICES ───
+  {id:'s-spell-cantrip',name:'Spellcasting: Cantrip',section:'Services',category:'Spellcasting Services',cost:3000,costDisplay:'30 GP',weight:0,note:'Village, town, or city'},
+  {id:'s-spell-1',name:'Spellcasting: Level 1',section:'Services',category:'Spellcasting Services',cost:5000,costDisplay:'50 GP',weight:0,note:'Village, town, or city'},
+  {id:'s-spell-2',name:'Spellcasting: Level 2',section:'Services',category:'Spellcasting Services',cost:20000,costDisplay:'200 GP',weight:0,note:'Village, town, or city'},
+  {id:'s-spell-3',name:'Spellcasting: Level 3',section:'Services',category:'Spellcasting Services',cost:30000,costDisplay:'300 GP',weight:0,note:'Town or city only'},
+  {id:'s-spell-45',name:'Spellcasting: Levels 4\u20135',section:'Services',category:'Spellcasting Services',cost:200000,costDisplay:'2,000 GP',weight:0,note:'Town or city only'},
+  {id:'s-spell-68',name:'Spellcasting: Levels 6\u20138',section:'Services',category:'Spellcasting Services',cost:2000000,costDisplay:'20,000 GP',weight:0,note:'City only'},
+  {id:'s-spell-9',name:'Spellcasting: Level 9',section:'Services',category:'Spellcasting Services',cost:10000000,costDisplay:'100,000 GP',weight:0,note:'City only'},
+
+  // ─── LIFESTYLE EXPENSES ───
+  {id:'s-lifestyle-wretched',name:'Lifestyle: Wretched',section:'Services',category:'Lifestyle Expenses',cost:0,costDisplay:'Free',weight:0},
+  {id:'s-lifestyle-squalid',name:'Lifestyle: Squalid (per day)',section:'Services',category:'Lifestyle Expenses',cost:10,costDisplay:'1 SP',weight:0},
+  {id:'s-lifestyle-poor',name:'Lifestyle: Poor (per day)',section:'Services',category:'Lifestyle Expenses',cost:20,costDisplay:'2 SP',weight:0},
+  {id:'s-lifestyle-modest',name:'Lifestyle: Modest (per day)',section:'Services',category:'Lifestyle Expenses',cost:100,costDisplay:'1 GP',weight:0},
+  {id:'s-lifestyle-comfortable',name:'Lifestyle: Comfortable (per day)',section:'Services',category:'Lifestyle Expenses',cost:200,costDisplay:'2 GP',weight:0},
+  {id:'s-lifestyle-wealthy',name:'Lifestyle: Wealthy (per day)',section:'Services',category:'Lifestyle Expenses',cost:400,costDisplay:'4 GP',weight:0},
+  {id:'s-lifestyle-aristocratic',name:'Lifestyle: Aristocratic (per day)',section:'Services',category:'Lifestyle Expenses',cost:1000,costDisplay:'10 GP',weight:0},
+];
+
+/* ═══════════════════════════════════════════════
+   LOOKUP MAP & CATEGORY ORDER
+   ═══════════════════════════════════════════════ */
+
+const ITEMS_BY_ID = Object.fromEntries(ITEMS.map(i => [i.id, i]));
+
+const CATEGORY_ORDER = [
+  'Simple Melee Weapons','Simple Ranged Weapons','Martial Melee Weapons','Martial Ranged Weapons',
+  'Light Armor','Medium Armor','Heavy Armor','Shield',
+  "Artisan's Tools",'Other Tools','Gaming Sets','Musical Instruments',
+  'Adventuring Gear','Ammunition','Arcane Focuses','Druidic Focuses','Holy Symbols','Equipment Packs',
+  'Mounts & Animals','Tack, Harness & Vehicles','Ships',
+  'Food, Drink & Lodging','Hirelings','Spellcasting Services','Lifestyle Expenses'
+];
+
+const SECTION_MAP = {
+  'all': null,
+  'Weapons': 'Weapons',
+  'Armor': 'Armor',
+  'Tools': 'Tools',
+  'Gear': 'Gear',
+  'Mounts & Vehicles': 'Mounts & Vehicles',
+  'Services': 'Services'
+};
+
+/* ═══════════════════════════════════════════════
+   SVG ICONS
+   ═══════════════════════════════════════════════ */
+
+const ICON_EXTERNAL = '<svg class="item-link" viewBox="0 0 24 24"><path d="M19 19H5V5h7V3H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7h-2v7zM14 3v2h3.59l-9.83 9.83 1.41 1.41L19 6.41V10h2V3h-7z"/></svg>';
+const ICON_REMOVE = '<svg viewBox="0 0 24 24" width="14" height="14"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>';
+
+/* ═══════════════════════════════════════════════
+   APP STATE
+   ═══════════════════════════════════════════════ */
+
+let cart = new Map(); // id -> quantity
+let activeSection = 'all';
+let searchQuery = '';
+let strScore = 10;
+let searchTimeout = null;
+
+/* ═══════════════════════════════════════════════
+   UTILITY
+   ═══════════════════════════════════════════════ */
+
+function cpToDisplay(cp) {
+  if (cp === 0) return 'Free';
+  const pp = Math.floor(cp / 1000);
+  cp %= 1000;
+  const gp = Math.floor(cp / 100);
+  cp %= 100;
+  const sp = Math.floor(cp / 10);
+  cp %= 10;
+  const parts = [];
+  if (pp) parts.push(pp.toLocaleString() + ' PP');
+  if (gp) parts.push(gp.toLocaleString() + ' GP');
+  if (sp) parts.push(sp + ' SP');
+  if (cp) parts.push(cp + ' CP');
+  return parts.join(', ') || 'Free';
+}
+
+function escHtml(str) {
+  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function formatWeight(w) {
+  if (w === 0) return '\u2014';
+  if (w === Math.floor(w)) return w + ' lb.';
+  // Handle fractions nicely
+  if (w === 0.25) return '\u00BC lb.';
+  if (w === 0.5) return '\u00BD lb.';
+  return w + ' lb.';
+}
+
+/* ═══════════════════════════════════════════════
+   RENDER CATALOG
+   ═══════════════════════════════════════════════ */
+
+function getSearchableText(item) {
+  let text = item.name;
+  if (item.damage) text += ' ' + item.damage;
+  if (item.properties && item.properties !== '\u2014') text += ' ' + item.properties;
+  if (item.mastery) text += ' ' + item.mastery;
+  if (item.ac) text += ' AC ' + item.ac;
+  if (item.note) text += ' ' + item.note;
+  if (item.contents) text += ' ' + item.contents;
+  text += ' ' + item.category + ' ' + item.section;
+  return text.toLowerCase();
+}
+
+function matchesFilter(item) {
+  if (activeSection !== 'all' && item.section !== SECTION_MAP[activeSection]) return false;
+  if (searchQuery) {
+    const searchable = getSearchableText(item);
+    const terms = searchQuery.toLowerCase().split(/\s+/);
+    return terms.every(t => searchable.includes(t));
+  }
+  return true;
+}
+
+function renderItemCard(item) {
+  let statsHtml = '';
+
+  // Weapon stats
+  if (item.damage) {
+    statsHtml += '<div class="item-stats"><span class="stat-label">Damage:</span> ' + escHtml(item.damage) + '</div>';
+    if (item.properties && item.properties !== '\u2014') {
+      statsHtml += '<div class="item-stats"><span class="stat-label">Properties:</span> ' + escHtml(item.properties) + '</div>';
+    }
+    statsHtml += '<div class="item-stats"><span class="stat-label">Mastery:</span> ' + escHtml(item.mastery) + '</div>';
+  }
+
+  // Armor stats
+  if (item.ac) {
+    statsHtml += '<div class="item-stats"><span class="stat-label">AC:</span> ' + escHtml(item.ac) + '</div>';
+    if (item.strReq) statsHtml += '<div class="item-stats"><span class="stat-label">STR Required:</span> ' + item.strReq + '</div>';
+    if (item.stealthDisadv) statsHtml += '<div class="item-stats"><span class="stat-label">Stealth:</span> Disadvantage</div>';
+  }
+
+  // Pack contents
+  if (item.contents) {
+    statsHtml += '<div class="item-stats"><span class="stat-label">Contains:</span> ' + escHtml(item.contents) + '</div>';
+  }
+
+  // Note
+  if (item.note && !item.contents) {
+    statsHtml += '<div class="item-stats">' + escHtml(item.note) + '</div>';
+  }
+
+  const linkHtml = item.url
+    ? '<a href="' + escHtml(item.url) + '" target="_blank" rel="noopener" class="item-link-anchor" title="View on D&amp;D Beyond" onclick="event.stopPropagation()">' + ICON_EXTERNAL + '</a>'
+    : '';
+
+  return '<div class="item-card" data-id="' + item.id + '">'
+    + linkHtml
+    + '<div class="item-name">' + escHtml(item.name) + '</div>'
+    + '<div class="item-cost-weight">'
+    + '<span class="item-cost">' + escHtml(item.costDisplay) + '</span>'
+    + '<span>' + formatWeight(item.weight) + '</span>'
+    + '</div>'
+    + statsHtml
+    + '</div>';
+}
+
+function renderCatalog() {
+  const catalog = document.getElementById('catalog');
+  const grouped = {};
+
+  ITEMS.forEach(item => {
+    if (!matchesFilter(item)) return;
+    if (!grouped[item.category]) grouped[item.category] = [];
+    grouped[item.category].push(item);
+  });
+
+  if (Object.keys(grouped).length === 0) {
+    catalog.innerHTML = '<div class="no-results">No items match your search.</div>';
+    return;
+  }
+
+  let html = '';
+  CATEGORY_ORDER.forEach(cat => {
+    if (!grouped[cat]) return;
+    const items = grouped[cat];
+    html += '<details class="category-section" open>'
+      + '<summary>' + escHtml(cat) + ' <span class="item-count">(' + items.length + ')</span></summary>'
+      + '<div class="items-grid">';
+    items.forEach(item => { html += renderItemCard(item); });
+    html += '</div></details>';
+  });
+
+  catalog.innerHTML = html;
+}
+
+/* ═══════════════════════════════════════════════
+   RENDER CART
+   ═══════════════════════════════════════════════ */
+
+function renderCart() {
+  const cartItems = document.getElementById('cartItems');
+  const cartTotals = document.getElementById('cartTotals');
+  const cartActions = document.getElementById('cartActions');
+  const cartCountHeader = document.getElementById('cartCountHeader');
+  const fabBadge = document.getElementById('fabBadge');
+
+  let totalItems = 0;
+  let totalCost = 0;
+  let totalWeight = 0;
+
+  cart.forEach((qty, id) => {
+    totalItems += qty;
+    const item = ITEMS_BY_ID[id];
+    if (item) {
+      totalCost += item.cost * qty;
+      totalWeight += item.weight * qty;
+    }
+  });
+
+  // Header count
+  cartCountHeader.textContent = totalItems > 0 ? totalItems + ' item' + (totalItems !== 1 ? 's' : '') : '';
+  fabBadge.textContent = totalItems > 0 ? (totalItems > 99 ? '99+' : totalItems) : '';
+
+  // Cart items
+  if (cart.size === 0) {
+    cartItems.innerHTML = '<div class="cart-empty">Your cart is empty.<br>Click items to add them.</div>';
+    cartTotals.innerHTML = '';
+    cartActions.style.display = 'none';
+    return;
+  }
+
+  let itemsHtml = '';
+  cart.forEach((qty, id) => {
+    const item = ITEMS_BY_ID[id];
+    if (!item) return;
+    const lineCost = item.cost * qty;
+    const lineWeight = item.weight * qty;
+    itemsHtml += '<div class="cart-item">'
+      + '<div class="cart-item-name">' + escHtml(item.name) + '</div>'
+      + '<div class="cart-item-details">' + cpToDisplay(lineCost)
+      + (lineWeight > 0 ? ' \u00B7 ' + formatWeight(lineWeight) : '') + '</div>'
+      + '<div class="cart-item-controls">'
+      + '<button class="qty-btn" data-action="dec" data-id="' + id + '">\u2212</button>'
+      + '<span class="qty-display">' + qty + '</span>'
+      + '<button class="qty-btn" data-action="inc" data-id="' + id + '">+</button>'
+      + '<button class="remove-btn" data-action="remove" data-id="' + id + '" title="Remove">' + ICON_REMOVE + '</button>'
+      + '</div></div>';
+  });
+  cartItems.innerHTML = itemsHtml;
+
+  // Totals + encumbrance
+  const capacity = strScore * 15;
+  const pct = capacity > 0 ? Math.min((totalWeight / capacity) * 100, 100) : 0;
+  const overPct = totalWeight / capacity;
+  let barClass = 'green';
+  if (overPct > 1) barClass = 'red';
+  else if (overPct > 0.75) barClass = 'yellow';
+
+  let statusHtml = '';
+  if (totalWeight > capacity) {
+    statusHtml = '<div class="encumbrance-status over">ENCUMBERED \u2014 Speed reduced to 5 ft.</div>';
+  }
+
+  cartTotals.innerHTML = ''
+    + '<div class="cart-total-row total-cost"><span>Total Cost</span><span>' + cpToDisplay(totalCost) + '</span></div>'
+    + '<div class="cart-total-row total-weight"><span>Total Weight</span><span>' + formatWeight(totalWeight) + '</span></div>'
+    + '<div class="encumbrance-section">'
+    + '<div class="encumbrance-label"><span>Encumbrance</span><span>' + totalWeight + ' / ' + capacity + ' lb.</span></div>'
+    + '<div class="encumbrance-bar"><div class="encumbrance-fill ' + barClass + '" style="width:' + Math.max(pct, 1) + '%"></div></div>'
+    + statusHtml
+    + '</div>';
+
+  cartActions.style.display = '';
+}
+
+/* ═══════════════════════════════════════════════
+   CART OPERATIONS
+   ═══════════════════════════════════════════════ */
+
+function addToCart(id) {
+  const qty = cart.get(id) || 0;
+  cart.set(id, qty + 1);
+  saveCart();
+  renderCart();
+}
+
+function removeFromCart(id) {
+  cart.delete(id);
+  saveCart();
+  renderCart();
+}
+
+function setQuantity(id, qty) {
+  if (qty <= 0) {
+    cart.delete(id);
+  } else {
+    cart.set(id, qty);
+  }
+  saveCart();
+  renderCart();
+}
+
+function clearCart() {
+  if (!confirm('Clear all items from cart?')) return;
+  cart.clear();
+  saveCart();
+  renderCart();
+}
+
+/* ═══════════════════════════════════════════════
+   PERSISTENCE (localStorage)
+   ═══════════════════════════════════════════════ */
+
+const STORAGE_KEY = 'phbvendor-cart';
+const STR_KEY = 'phbvendor-str';
+
+function saveCart() {
+  try {
+    const data = Array.from(cart.entries());
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    localStorage.setItem(STR_KEY, strScore);
+  } catch(e) { /* quota exceeded, ignore */ }
+}
+
+function loadCart() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) {
+      const data = JSON.parse(raw);
+      cart = new Map(data.filter(([id]) => ITEMS_BY_ID[id]));
+    }
+    const savedStr = localStorage.getItem(STR_KEY);
+    if (savedStr) {
+      strScore = parseInt(savedStr, 10) || 10;
+    }
+  } catch(e) { /* corrupted data, start fresh */ }
+}
+
+/* ═══════════════════════════════════════════════
+   EVENT HANDLERS
+   ═══════════════════════════════════════════════ */
+
+function init() {
+  loadCart();
+
+  // Set STR inputs
+  document.getElementById('strInput').value = strScore;
+  document.getElementById('strInputMobile').value = strScore;
+
+  // Render
+  renderCatalog();
+  renderCart();
+
+  // ─── Catalog click delegation ───
+  document.getElementById('catalog').addEventListener('click', function(e) {
+    const card = e.target.closest('.item-card');
+    if (!card) return;
+    // Don't add to cart if clicking the external link
+    if (e.target.closest('.item-link-anchor')) return;
+    const id = card.dataset.id;
+    addToCart(id);
+    // Flash animation
+    card.classList.remove('flash');
+    void card.offsetWidth; // trigger reflow
+    card.classList.add('flash');
+  });
+
+  // ─── Cart click delegation ───
+  document.getElementById('cartItems').addEventListener('click', function(e) {
+    const btn = e.target.closest('[data-action]');
+    if (!btn) return;
+    const id = btn.dataset.id;
+    const action = btn.dataset.action;
+    const qty = cart.get(id) || 0;
+    if (action === 'inc') setQuantity(id, qty + 1);
+    else if (action === 'dec') setQuantity(id, qty - 1);
+    else if (action === 'remove') removeFromCart(id);
+  });
+
+  // ─── Clear cart ───
+  document.getElementById('clearCartBtn').addEventListener('click', clearCart);
+
+  // ─── Search ───
+  document.getElementById('searchInput').addEventListener('input', function(e) {
+    clearTimeout(searchTimeout);
+    searchTimeout = setTimeout(function() {
+      searchQuery = e.target.value.trim();
+      renderCatalog();
+    }, 150);
+  });
+
+  // ─── Category tabs ───
+  document.getElementById('categoryTabs').addEventListener('click', function(e) {
+    const btn = e.target.closest('.tab-btn');
+    if (!btn) return;
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    activeSection = btn.dataset.section;
+    renderCatalog();
+  });
+
+  // ─── STR input (desktop) ───
+  document.getElementById('strInput').addEventListener('input', function(e) {
+    strScore = Math.max(1, Math.min(30, parseInt(e.target.value, 10) || 10));
+    document.getElementById('strInputMobile').value = strScore;
+    saveCart();
+    renderCart();
+  });
+
+  // ─── STR input (mobile) ───
+  document.getElementById('strInputMobile').addEventListener('input', function(e) {
+    strScore = Math.max(1, Math.min(30, parseInt(e.target.value, 10) || 10));
+    document.getElementById('strInput').value = strScore;
+    saveCart();
+    renderCart();
+  });
+
+  // ─── Mobile cart toggle ───
+  document.getElementById('cartFab').addEventListener('click', function() {
+    document.getElementById('cartPanel').classList.add('open');
+    document.getElementById('cartOverlay').classList.add('visible');
+  });
+
+  function closeCart() {
+    document.getElementById('cartPanel').classList.remove('open');
+    document.getElementById('cartOverlay').classList.remove('visible');
+  }
+
+  document.getElementById('cartCloseBtn').addEventListener('click', closeCart);
+  document.getElementById('cartOverlay').addEventListener('click', closeCart);
+}
+
+document.addEventListener('DOMContentLoaded', init);
+</script>
+</body>
+</html>
+  
